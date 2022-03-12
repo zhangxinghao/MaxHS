@@ -4,14 +4,14 @@
 #  make p		 "profiling version"
 #  make clean   	 "remove object files and executable"
 ###################################################################################################
-.PHONY:	r d p lr ld lp all install install-bin clean distclean
+.PHONY:	r d p lr ld lp sr all install install-bin clean distclean
 all: r
 
 ## Configurable options ###########################################################################
 
 ## Cplex library location (configure these variables)
-LINUX_CPLEXLIBDIR   ?= /w/63/fbacchus/CPLEX_Studio1210/cplex/lib/x86-64_linux/static_pic
-LINUX_CPLEXINCDIR   ?= /w/63/fbacchus/CPLEX_Studio1210/cplex/include
+LINUX_CPLEXLIBDIR   ?= /opt/ibm/ILOG/CPLEX_Studio1210/cplex/lib/x86-64_linux/static_pic
+LINUX_CPLEXINCDIR   ?= /opt/ibm/ILOG/CPLEX_Studio1210/cplex/include
 
 ## Cplex libary on mac vm
 LINUXVM_CPLEXLIBDIR   ?= /home/fbacchus/CPLEX_Studio1210/cplex/lib/x86-64_linux/static_pic
@@ -53,6 +53,7 @@ MAXHS_REL    += -flto
 endif
 # Target file names
 MAXHS      = maxhs#       Name of Maxhs main executable.
+MAXHS_SO   =lib$(MAXHS).so
 MAXHS_SLIB = lib$(MAXHS).a#  Name of Maxhs static library.
 
 #-DIL_STD is a IBM/CPLEX issue
@@ -88,6 +89,8 @@ lr:	$(BUILD_DIR)/release/lib/$(MAXHS_SLIB)
 ld:	$(BUILD_DIR)/debug/lib/$(MAXHS_SLIB)
 lp:	$(BUILD_DIR)/profile/lib/$(MAXHS_SLIB)
 
+sr: $(BUILD_DIR)/release/lib/$(MAXHS_SO)
+
 ## Build-type Compile-flags:
 $(BUILD_DIR)/release/%.o:           MAXHS_CXXFLAGS +=$(MAXHS_REL) $(MAXHS_RELSYM)
 $(BUILD_DIR)/debug/%.o:				MAXHS_CXXFLAGS +=$(MAXHS_DEB)
@@ -107,9 +110,11 @@ $(BUILD_DIR)/debug/bin/$(MAXHS):	 	$(BUILD_DIR)/debug/maxhs/core/Main.o $(foreac
 #$(BUILD_DIR)/profile/bin/$(MAXHS):	 	$(BUILD_DIR)/profile/maxhs/core/Main.o $(BUILD_DIR)/profile/lib/$(MAXHS_SLIB)
 
 ## Library dependencies
-#$(BUILD_DIR)/release/lib/$(MAXHS_SLIB):	$(foreach o,$(OBJS),$(BUILD_DIR)/release/$(o))
-#$(BUILD_DIR)/debug/lib/$(MAXHS_SLIB):		$(foreach o,$(OBJS),$(BUILD_DIR)/debug/$(o))
-#$(BUILD_DIR)/profile/lib/$(MAXHS_SLIB):	$(foreach o,$(OBJS),$(BUILD_DIR)/profile/$(o))
+$(BUILD_DIR)/release/lib/$(MAXHS_SLIB):	$(foreach o,$(OBJS),$(BUILD_DIR)/release/$(o))
+# $(BUILD_DIR)/debug/lib/$(MAXHS_SLIB):		$(foreach o,$(OBJS),$(BUILD_DIR)/debug/$(o))
+# $(BUILD_DIR)/profile/lib/$(MAXHS_SLIB):	$(foreach o,$(OBJS),$(BUILD_DIR)/profile/$(o))
+
+$(BUILD_DIR)/release/lib/$(MAXHS_SO):	$(foreach o,$(OBJS),$(BUILD_DIR)/release/$(o))
 
 ## Compile rules 
 $(BUILD_DIR)/release/%.o:	%.cc
@@ -150,6 +155,12 @@ $(BUILD_DIR)/release/bin/$(MAXHS) $(BUILD_DIR)/debug/bin/$(MAXHS) $(BUILD_DIR)/p
 	$(ECHO) Linking Static Library: $@
 	$(VERB) mkdir -p $(dir $@)
 	$(VERB) $(AR) -rcs $@ $^
+
+$(BUILD_DIR)/release/lib/$(MAXHS_SO):
+	$(ECHO) Linking Shared Library: $@
+	$(VERB) mkdir -p $(dir $@)
+	$(VERB) $(CXX) $^ $(MAXHS_LDFLAGS) $(LDFLAGS) -fPIC -shared -o $@
+
 
 clean:
 	rm -f $(foreach t, release debug profile, $(foreach o, $(ALLOBJS), $(BUILD_DIR)/$t/$o)) \
