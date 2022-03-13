@@ -9,7 +9,7 @@ extern "C"
 
     void solver_add_clause(int weight, int *lits, int size);
 
-    int solver_lit_val(int lit);
+    int solver_lit_value(int lit);
 
     int solver_solve();
 

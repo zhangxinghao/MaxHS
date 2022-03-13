@@ -69,7 +69,7 @@ static BoolOption opt_printBstSoln(maxhs, "printBstSoln",
                                    "Print best solution found", false);
 static BoolOption opt_printSoln(maxhs, "printSoln", "Print solution", false);
 static BoolOption opt_printNewFormat(maxhs, "printSoln-new-format",
-                                     "Print solution in new format", true);
+                                     "Print solution in new format", false);
 
 static DoubleOption opt_tolerance(
     maxhs, "tolerance",

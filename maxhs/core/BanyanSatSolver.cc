@@ -24,16 +24,12 @@ namespace Minisat = Glucose;
 using namespace Minisat;
 
 static Wcnf *byFormula{};
-static vector<lbool> bymodel;
+static vector<lbool> *bymodel;
 
 void solver_init(int num_vars, int num_clauses, int top_weight)
 {
-    if (byFormula != nullptr)
-    {
-        delete byFormula;
-        byFormula = nullptr;
-        bymodel.clear();
-    }
+    solver_release();
+    bymodel = new vector<lbool>();
     byFormula = new Wcnf();
     byFormula->set_dimacs_params(num_vars, num_clauses, (Weight)top_weight);
 }
@@ -57,18 +53,35 @@ void solver_add_clause(int weight, int *lits, int size)
     byFormula->addDimacsClause(litVtr, w);
 }
 
-int solver_lit_val(int lit)
+int solver_lit_value(int lit)
 {
-    auto litBool = bymodel[lit - 1];
+    auto litBool = bymodel->at(lit - 1);
     if (litBool == l_False)
     {
         return -lit;
     }
-    return lit;
+    else
+    {
+        return lit;
+    }
 }
 
 int solver_solve()
 {
+    params.readOptions();
+    // params.printNewFormat = false;
+    // params.printSoln = true;
+    cout << "c Parameter Settings\n";
+    cout << "c ============================================\n";
+    printOptionSettings("c ", cout);
+    cout << "c ============================================\n";
+    cout << "c\n";
+
+    byFormula->computeWtInfo();
+    byFormula->printFormulaStats();
+    byFormula->simplify();
+    byFormula->printSimpStats();
+
     MaxHS::MaxSolver bysolver(byFormula);
     bysolver.solve();
     int rst = 0;
@@ -79,13 +92,14 @@ int solver_solve()
     else
     {
         auto model = bysolver.getBestModel();
-        for (size_t i = 0; i < model.size(); i++)
+        auto exmodel = byFormula->rewriteModelToInput(model);
+        for (size_t i = 1; i < exmodel.size(); i++)
         {
-            bymodel.push_back(model[i]);
+            bymodel->push_back(exmodel[i]);
         }
     }
 
-    bysolver.printStatsAndExit(-1, 0);
+    // bysolver.printStatsAndExit(-1, 0);
 
     return rst;
 }
@@ -96,6 +110,11 @@ void solver_release()
     {
         delete byFormula;
         byFormula = nullptr;
-        bymodel.clear();
+    }
+    if (bymodel != nullptr)
+    {
+        bymodel->clear();
+        delete bymodel;
+        bymodel = nullptr;
     }
 }
