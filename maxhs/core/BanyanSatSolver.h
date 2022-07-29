@@ -2,18 +2,21 @@
 #ifndef Banyan_h
 #define Banyan_h
 
-extern "C"
-{
+extern "C" {
 
-    void solver_init(int num_vars, int num_clauses, int top_weight);
+struct problem {
+  int cluster_id;
+  int num_vars;
+  int num_clauses;
+  int top_weight;
+  int* num_lits;
+  int* weight;
+  int* clauses;
+  int status;
+  int* lits;
+};
 
-    void solver_add_clause(int weight, int *lits, int size);
-
-    int solver_lit_value(int lit);
-
-    int solver_solve();
-
-    void solver_release();
+void solver_solve_problems(problem* problems, int plen);
 }
 
 #endif
