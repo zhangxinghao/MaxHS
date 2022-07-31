@@ -4,19 +4,9 @@
 
 extern "C" {
 
-struct problem {
-  int cluster_id;
-  int num_vars;
-  int num_clauses;
-  int top_weight;
-  int* num_lits;
-  int* weight;
-  int* clauses;
-  int status;
-  int* lits;
-};
-
-void solver_solve_problems(problem* problems, int plen);
+void solver_solve_problems(int pb_len, int* cluster_ids, int* pbs_num_vars,
+                           int* pbs_num_clauses, int* pbs_top_weight, int* pbs_num_lits,
+                           int* pbs_weights, int* pbs_clauses, int* pbs_results);
 }
 
 #endif

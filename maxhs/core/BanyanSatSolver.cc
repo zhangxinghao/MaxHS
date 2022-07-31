@@ -24,131 +24,67 @@ namespace Minisat = Glucose;
 #endif
 using namespace Minisat;
 
-void solver_solve_problems(problem *problems, int plen) {
+void solver_solve_problems(int pb_len, int* cluster_ids, int* pbs_num_vars,
+                           int* pbs_num_clauses, int* pbs_top_weight,
+                           int* pbs_num_lits, int* pbs_weights,
+                           int* pbs_clauses, int* pbs_results) {
   params.readOptions();
 
-  std::vector<Wcnf> byFormulas(plen);
-  for (int i = 0; i < plen; i++) {
-    problem pb = problems[i];
-    auto &byFormula = byFormulas[i];
-    byFormula.set_dimacs_params(pb.num_vars, pb.num_clauses, pb.top_weight);
-    int lit_id = 0;
-    for (int cid = 0; cid < pb.num_clauses; cid++) {
-      auto num_lits = pb.num_lits[cid];
-      lit_id += num_lits;
-      auto w = pb.weight[cid];
+  int clause_cursor = 0;
+  int lit_cursor = 0;
+  for (int pb_id = 0; pb_id < pb_len; pb_id++) {
+    int cluster_id = cluster_ids[pb_id];
+    int num_vars = pbs_num_vars[pb_id];
+    int num_clauses = pbs_num_clauses[pb_id];
+    int top_weight = pbs_top_weight[pb_id];
+    printf("cluster_id %d num_vars %d num_clauses %d top_weight %d\n",
+           cluster_id, num_vars, num_clauses, top_weight);
+    Wcnf byFormula;
+    byFormula.set_dimacs_params(num_vars, num_clauses, top_weight);
+    int cid = clause_cursor;
+    clause_cursor+=num_clauses;
+    for (; cid < clause_cursor; cid++) {
+      printf("w %d c", pbs_weights[cid]);
       std::vector<Lit> lit_vtr;
-      for (; lit_id < num_lits; lit_id++) {
-        auto lit_val = pb.clauses[lit_id];
+      int lit_id = lit_cursor;
+      lit_cursor += pbs_num_lits[cid];
+      for (; lit_id < lit_cursor; lit_id++) {
+        int lit_val = pbs_clauses[lit_id];
+        printf(" %d ", lit_val);
         if (lit_val < 0) {
           lit_vtr.push_back(mkLit(-lit_val, true));
         } else {
           lit_vtr.push_back(mkLit(lit_val, false));
         }
       }
-      byFormula.addDimacsClause(lit_vtr, (Weight)w);
+      printf("\n");
+      byFormula.addDimacsClause(lit_vtr, (Weight)pbs_weights[cid]);
     }
+
     byFormula.computeWtInfo();
     byFormula.simplify();
     MaxHS::MaxSolver bysolver(&byFormula);
     bysolver.solve();
-    vector<lbool> bymodel;
-    int status = 0;
-    if (bysolver.isUnsat()) {
-      status = -1;
-    } else {
-      auto model = bysolver.getBestModel();
-      auto exmodel = byFormula.rewriteModelToInput(model);
-      for (size_t i = 1; i < exmodel.size(); i++) {
-        bymodel.push_back(exmodel[i]);
-      }
-    }
-    pb.status = status;
-    pb.lits = (int *)malloc((pb.num_vars + 1) * sizeof(int));
-    for (int lit_id = 1; lit_id <= pb.num_vars; lit_id++) {
-      auto lit_val = bymodel.at(lit_id - 1);
-      if (lit_val == l_False) {
-        pb.lits[lit_id] = -lit_id;
-      } else {
-        pb.lits[lit_id] = lit_id;
-      }
-    }
   }
+
+  // vector<lbool> bymodel;
+  // int status = 0;
+  // if (bysolver.isUnsat()) {
+  //   result[0] = 20;
+  // } else {
+  //   result[0] = 10;
+  //   auto model = bysolver.getBestModel();
+  //   auto exmodel = byFormula.rewriteModelToInput(model);
+  //   for (int lit_id = 1; lit_id < num_vars + 1; lit_id++) {
+  //     auto m = exmodel[lit_id];
+  //     printf(" [%d,%s] ", lit_id, m == l_False ? "false" : "true");
+  //     if (m == l_False) {
+  //       result[lit_id] = -lit_id;
+  //     } else {
+  //       result[lit_id] = lit_id;
+  //     }
+  //   }
+  //   printf("\n");
+  // }
+
 }
-
-// static Wcnf *byFormula{};
-// static vector<lbool> *bymodel;
-
-// void solver_init(int num_vars, int num_clauses, int top_weight) {
-//   bymodel = new vector<lbool>();
-//   byFormula = new Wcnf();
-//   byFormula->set_dimacs_params(num_vars, num_clauses, (Weight)top_weight);
-// }
-
-// void solver_add_clause(int weight, int *lits, int size) {
-//   Weight w = (Weight)weight;
-//   std::vector<Lit> litVtr;
-//   for (int i = 0; i < size; i++) {
-//     auto litVal = lits[i];
-//     if (litVal < 0) {
-//       litVtr.push_back(mkLit(-litVal, true));
-//     } else {
-//       litVtr.push_back(mkLit(litVal, false));
-//     }
-//   }
-//   byFormula->addDimacsClause(litVtr, w);
-// }
-
-// int solver_lit_value(int lit) {
-//   auto litBool = bymodel->at(lit - 1);
-//   if (litBool == l_False) {
-//     return -lit;
-//   } else {
-//     return lit;
-//   }
-// }
-
-// int solver_solve() {
-//   params.readOptions();
-//   // params.printNewFormat = false;
-//   // params.printSoln = true;
-//   // cout << "c Parameter Settings\n";
-//   // cout << "c ============================================\n";
-//   // printOptionSettings("c ", cout);
-//   // cout << "c ============================================\n";
-//   // cout << "c\n";
-
-//   byFormula->computeWtInfo();
-//   // byFormula->printFormulaStats();
-//   byFormula->simplify();
-//   // byFormula->printSimpStats();
-
-//   MaxHS::MaxSolver bysolver(byFormula);
-//   bysolver.solve();
-//   int rst = 0;
-//   if (bysolver.isUnsat()) {
-//     rst = -1;
-//   } else {
-//     auto model = bysolver.getBestModel();
-//     auto exmodel = byFormula->rewriteModelToInput(model);
-//     for (size_t i = 1; i < exmodel.size(); i++) {
-//       bymodel->push_back(exmodel[i]);
-//     }
-//   }
-//   fflush(stdout);
-//   fflush(stderr);
-//   //   bysolver.printStatsAndExit(-1, 0);
-//   return rst;
-// }
-
-// void solver_release() {
-//   if (byFormula != nullptr) {
-//     delete byFormula;
-//     byFormula = nullptr;
-//   }
-//   if (bymodel != nullptr) {
-//     bymodel->clear();
-//     delete bymodel;
-//     bymodel = nullptr;
-//   }
-// }
