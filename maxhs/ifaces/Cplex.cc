@@ -323,7 +323,7 @@ void Cplex::add_processed_clause(const vector<Lit>& theCon) {
 }
 
 void Cplex::add_sum_unit(Lit sout) {
-  assert(summations->isSOutput(sout));
+  assert(summations->isSoutput(sout));
   assert(getExUnits(sout) == l_True);
   vector<Lit> forced_sum_outs;
 
@@ -372,7 +372,7 @@ void Cplex::add_sum_unit(Lit sout) {
 
 void Cplex::add_sum_output_constraint(Lit sout) {
   // add only souts constraint on its input bvars.
-  assert(summations->isSOutput(sout));
+  assert(summations->isSoutput(sout));
   assert(ex2in(sout) == var_Undef);
   assert(getExUnits(sout) == l_True);
 
@@ -454,7 +454,7 @@ void Cplex::add_sum_output_constraint(Lit sout) {
 }
 
 void Cplex::add_sum_output_defn(Lit sout) {
-  assert(summations->isSOutput(sout));
+  assert(summations->isSoutput(sout));
   if (ex2in(sout) != var_Undef)  // defn already in place.
     return;
   // add defn in terms of positive sum

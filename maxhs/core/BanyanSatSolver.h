@@ -2,11 +2,17 @@
 #ifndef Banyan_h
 #define Banyan_h
 
-extern "C" {
+#include "maxhs/banyan/banyan_go_types.pb.h"
+#include "maxhs/core/Wcnf.h"
 
-void solver_solve_problems(int pb_len, int* cluster_ids, int* pbs_num_vars,
-                           int* pbs_num_clauses, int* pbs_top_weight, int* pbs_num_lits,
-                           int* pbs_weights, int* pbs_clauses, int* pbs_results);
-}
+class BanyanSatSolver {
+ private:
+  banyan::Problem problem;
+
+ public:
+  BanyanSatSolver(banyan::Problem problem) : problem(problem){};
+  ~BanyanSatSolver() = default;
+  banyan::Result solve();
+};
 
 #endif

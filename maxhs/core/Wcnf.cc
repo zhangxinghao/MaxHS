@@ -618,12 +618,15 @@ void Wcnf::remDupCls() {
           cdata[i].w = residue;
           cdata[j].w = 0;
         }
-      }
-
-      else if (eqVecs(cdata[i], cdata[j])) {  // equal clauses are merged.
+      } else if (eqVecs(cdata[i], cdata[j])) {  // equal clauses are merged.
         if (ihard || jhard) {  // hard subsumes both soft and hard.
-          cdata[i].w = -1;
-          cdata[j].w = 0;
+          if (ihard && jhard) {
+            cdata[j].w = 0;
+          } else if (!ihard) {
+            cdata[i].w = 0;
+          } else if (!jhard) {
+            cdata[j].w = 0;
+          }
         } else {
           cdata[i].w += cdata[j].w;  // join softs.
           cdata[j].w = 0;

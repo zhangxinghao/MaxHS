@@ -79,7 +79,7 @@ class SortNet {
   static SRef makeSortNet(SumManager& tm, SRef rS, SRef lS);
 
   static SortNet& getSortNet(SRef idx) {
-    assert(0 <= idx && idx < static_cast<int>(all_sortNets.size()));
+    assert(0 <= (int)idx && (int)idx < static_cast<int>(all_sortNets.size()));
     return all_sortNets[int(idx)];
   }
 
